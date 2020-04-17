@@ -14,6 +14,10 @@ using nlohmann::json;
 using std::string;
 using std::vector;
 
+//Variables
+int lane = 1; // Lane 0 => left, Lane 1 => mid, Lane 2 => right
+double ref_vel = 49.5; // Desired vel of the car
+
 int main() {
   uWS::Hub h;
 
@@ -51,8 +55,6 @@ int main() {
     map_waypoints_dy.push_back(d_y);
   }
   
-  
-
   h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
@@ -91,10 +93,32 @@ int main() {
           
           int prev_size = previous_path_x.size();
 
-          //Variables
-          int lane = 1; // Lane 0 => left, Lane 1 => mid, Lane 2 => right
-          double ref_vel = 49.5; // Desired vel of the car
+          if(prev_size > 0){
+            car_s = end_path_s;
+          }
 
+          bool too_close = false;
+
+          //find ref_v to use
+          for(int i = 0; i < sensor_fusion.size(); i++){
+            //car is in my lane 
+            float d = sensor_fusion[i][6];
+            if(d < (2+4*lane+2) && d > (2+4*lane-2)){
+              double vx = sensor_fusion[i][3];
+              double vy = sensor_fusion[i][4];
+              double check_speed = sqrt(vx*vx+vy*vy);
+              double check_car_s = sensor_fusion[i][5];
+
+              //Where the other car will be in the future
+              check_car_s+=((double) prev_size*.02*check_speed); 
+
+              //Check s calues greater than mine and s gap
+              if((check_car_s > car_s) && (check_car_s-car_s) < 30){
+                ref_vel = 29.5;
+              }
+            }
+          }
+          
           json msgJson;
 
           /**
