@@ -16,7 +16,7 @@ using std::vector;
 
 //Variables
 int lane = 1; // Lane 0 => left, Lane 1 => mid, Lane 2 => right
-double ref_vel = 49.5; // Desired vel of the car
+double ref_vel = 0.0; // Desired vel of the car
 
 int main() {
   uWS::Hub h;
@@ -114,10 +114,19 @@ int main() {
 
               //Check s calues greater than mine and s gap
               if((check_car_s > car_s) && (check_car_s-car_s) < 30){
-                ref_vel = 29.5;
+                too_close = true;
               }
             }
           }
+
+          //If the car is too close reduce the velocity
+          if(too_close){
+            ref_vel -= .224;
+          }
+          // If there is car detected in a range increment the velocity with a maximum value of 49.5
+          else if(ref_vel < 49.5){
+            ref_vel += .224;
+          } 
           
           json msgJson;
 
