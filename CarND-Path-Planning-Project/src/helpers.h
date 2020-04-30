@@ -10,9 +10,10 @@
 using std::string;
 using std::vector;
 
-//Global Variables
-int lane = 1; // Lane 0 => left, Lane 1 => mid, Lane 2 => right
+///GLOBALVARIABLES: 
+int lane = 1;         // Lane 0 => left, Lane 1 => mid, Lane 2 => right
 double ref_vel = 0.0; // Desired vel of the car
+string state = "KL";  // Initial condition of the car (Keep Lane)
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -358,6 +359,34 @@ vector<vector<double>> get_trajectory(vector<double> &map_waypoints_x,vector<dou
     next_y_vals.push_back(y_point);
   }
   return {next_x_vals,next_y_vals};
+}
+
+/**
+ * TODO: Implement the successor_states function that store all the possible next states of a FSM.  
+ **/
+vector<string> successor_states(string current_state) {
+  // Store all the sucessor states of the current state
+  vector<string> states;
+  
+  // Sucessors of Keep Lane state
+  if(current_state == "KL") {
+    states.push_back("LCL");
+    states.push_back("LCR");
+    states.push_back("KL");
+  } 
+   
+  // Sucessors for Lane Change Left state
+  else if(current_state == "LCL") {
+    states.push_back("LCL");
+    states.push_back("KL");
+  }
+ 
+  // Sucessors for Lane Change Right state
+  else if(current_state == "LCR") {
+    states.push_back("LCR");
+    states.push_back("KL");
+  }
+  return states;
 }
 
 #endif  // HELPERS_H

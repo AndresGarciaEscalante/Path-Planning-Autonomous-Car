@@ -99,9 +99,15 @@ int main() {
           }
           //Predict the movement of the cars in the same lane
           vector<bool> prediction = get_preditiction_cars(sensor_fusion,lane,prev_size,car_s);
+          /// PRINT: The sensors senses cars in front of the car (left, mid, right)  
+          //std::cout << prediction[0] << "    " << prediction[1] << "    " << prediction [2] << std::endl;
 
-          //Display if the sensors senses cars in front of the car (left, mid, right)
-          std::cout << prediction[0] << "    " << prediction[1] << "    " << prediction [2] << std::endl;
+          //Store all the possible next states of the current state 
+          vector<string> possible_states = successor_states (state);
+          /// PRINT: Displays the possible next states of the current state  
+          /*for(int i = 0; i < possible_states.size();i++){
+            std::cout << possible_states[i] << std::endl;
+          }*/
 
           //If the car is too close reduce the velocity
           if(prediction[3]){
