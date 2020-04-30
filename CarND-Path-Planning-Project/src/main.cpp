@@ -98,10 +98,13 @@ int main() {
             car_s = end_path_s;
           }
           //Predict the movement of the cars in the same lane
-          bool too_close = get_preditiction_cars(sensor_fusion,lane,prev_size,car_s);
+          vector<bool> prediction = get_preditiction_cars(sensor_fusion,lane,prev_size,car_s);
+
+          //Display if the sensors senses cars in front of the car (left, mid, right)
+          std::cout << prediction[0] << "    " << prediction[1] << "    " << prediction [2] << std::endl;
 
           //If the car is too close reduce the velocity
-          if(too_close){
+          if(prediction[3]){
             ref_vel -= .224;
           }
           // If there is car detected in a range increment the velocity with a maximum value of 49.5

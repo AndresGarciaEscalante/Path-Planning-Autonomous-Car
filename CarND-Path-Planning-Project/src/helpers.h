@@ -160,9 +160,9 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
 }
 
 /**
- * TODO: Implement the Prediction function that will predict the movements of the other cars  
+ * PREVIOUS: Prediction function   
  **/ 
-bool get_preditiction_cars(vector<vector<double>> sensor_fusion, int lane, int prev_size, double car_s){
+/*bool get_preditiction_cars(vector<vector<double>> sensor_fusion, int &lane, int prev_size, double car_s){
   bool too_close = false;
   //find ref_v to use
   for(int i = 0; i < sensor_fusion.size(); i++){
@@ -180,10 +180,62 @@ bool get_preditiction_cars(vector<vector<double>> sensor_fusion, int lane, int p
       //Check s calues greater than mine and s gap
       if((check_car_s > car_s) && (check_car_s-car_s) < 30){
         too_close = true;
+        lane=2;
       }
     }
   }
   return too_close;
+}*/
+
+/**
+ * TODO: Implement the Prediction function that will predict the movements of the other cars  
+ **/ 
+vector <bool> get_preditiction_cars(vector<vector<double>> sensor_fusion, int lane, int prev_size, double car_s){
+  bool too_close = false;
+  bool front_left_car = false;
+  bool front_mid_car = false;
+  bool front_right_car = false;
+  
+  //find ref_v to use
+  for(int i = 0; i < sensor_fusion.size(); i++){
+    float d = sensor_fusion[i][6];
+    double vx = sensor_fusion[i][3];
+    double vy = sensor_fusion[i][4];
+    double check_speed = sqrt(vx*vx+vy*vy);
+    double check_car_s = sensor_fusion[i][5];
+
+    //Where the other car will be in the future
+    check_car_s+=((double) prev_size*.02*check_speed);
+    
+    // Left lane in the road
+    if(d < 4 && d > 0){
+      if((check_car_s > car_s) && (check_car_s-car_s) < 30){
+        front_left_car = true;
+        if(lane == 0){
+          too_close = true;
+        }
+      }
+    }
+    // Middle lane
+    else if(d < 8 && d > 4){
+      if((check_car_s > car_s) && (check_car_s-car_s) < 30){
+        front_mid_car = true;
+        if(lane == 1){
+          too_close = true;
+        }
+      }
+    }
+    //Right Lane
+    else if(d < 12 && d > 8){
+      if((check_car_s > car_s) && (check_car_s-car_s) < 30){
+        front_right_car = true;
+        if(lane == 2){
+          too_close = true;
+        }
+      }
+    }
+  }
+  return {front_left_car,front_mid_car,front_right_car,too_close};
 }
 
 /**
