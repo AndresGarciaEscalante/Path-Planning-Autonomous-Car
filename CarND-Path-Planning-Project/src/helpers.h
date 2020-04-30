@@ -243,7 +243,7 @@ vector <bool> get_preditiction_cars(vector<vector<double>> sensor_fusion, int la
  * TODO: Implement the Trajectory function that will build a path for the autonomous car  
  **/ 
 vector<vector<double>> get_trajectory(vector<double> &map_waypoints_x,vector<double> &map_waypoints_y, vector<double> &map_waypoints_s, int prev_size,
-                                      double car_x, double car_y, double car_s, double car_yaw,vector <double> previous_path_x,vector <double> previous_path_y) {
+                                      double car_x, double car_y, double car_s, double car_yaw,vector <double> previous_path_x,vector <double> previous_path_y,int lane,string possible_state){
 
   //Create a listt of widely spaced (x,y) waypoints, evely spaced at 30m
   // Later we will interpolate theses way points with a spline and fill it in with more points 
@@ -289,6 +289,16 @@ vector<vector<double>> get_trajectory(vector<double> &map_waypoints_x,vector<dou
 
   }
 
+  if(possible_state == "KL"){
+    lane = lane;
+  }
+  else if(possible_state == "LCL"){
+    lane--;
+  }
+  else if(possible_state == "LCR"){
+    lane++;
+  }
+  
   //In Frenet add evenly 30m spaced points ahead of the starting reference
   vector<double> next_wp0 = getXY(car_s+30,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
   vector<double> next_wp1 = getXY(car_s+60,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);

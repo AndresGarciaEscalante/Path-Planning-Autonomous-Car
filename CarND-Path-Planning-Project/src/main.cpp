@@ -117,20 +117,29 @@ int main() {
           else if(ref_vel < 49.5){
             ref_vel += .224;
           } 
-          
-          // Generate the trajectory of the car
-          vector<vector<double>> next_vals = get_trajectory(map_waypoints_x, map_waypoints_y, map_waypoints_s, prev_size,
-                                                            car_x,car_y, car_s, car_yaw, previous_path_x, previous_path_y);
-          
+
+          // Behaviour planning
+          vector <double> cost_function_values;
+          vector<vector<vector <double>>> possible_trajectories_points(possible_states.size());
+          // Evaluate each of the possible_next_states
+          for(int i = 0; i < possible_states.size();i++){
+            // Generate the trajectory for every possible next state
+            possible_trajectories_points[i]=get_trajectory(map_waypoints_x, map_waypoints_y, map_waypoints_s, prev_size,
+                                                           car_x,car_y, car_s, car_yaw, previous_path_x, previous_path_y,lane,possible_states[i]);
+            ///TODO: Develop the cost function.
+          }
+
           //Define the actual (x,y) points we will use for the planner
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          next_x_vals = next_vals[0];
-          next_y_vals = next_vals[1];
+          //Update the best trajectory [0 = left path trajectory, 1 = right path trajectory, 2 = mid path trajectory][0 = x points and 1 = y points]
+          next_x_vals = possible_trajectories_points[2][0];
+          next_y_vals = possible_trajectories_points[2][1];
           
           json msgJson;
-          // ENDTODO:
+          
+          /// ENDTODO:
         
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
