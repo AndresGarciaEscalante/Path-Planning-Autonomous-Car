@@ -90,17 +90,21 @@ int main() {
            * TODO: define a path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
            */
-
+          
           // Points not processed in the previous iteration
           int prev_size = previous_path_x.size();
           
+          // Locate the cars s at the end of the previous path
           if(prev_size > 0){
             car_s = end_path_s;
           }
+
           //Predict the movement of the cars in the same lane
           vector<bool> prediction = get_preditiction_cars(sensor_fusion,lane,prev_size,car_s);
           /// PRINT: The sensors senses cars in front of the car (left, mid, right)  
           //std::cout << prediction[0] << "    " << prediction[1] << "    " << prediction [2] << std::endl;
+          //std::cout << prediction[3] << "    " << prediction[4] << "    " << prediction [5] << std::endl;
+          //std::cout << "--------------------------------------------------------------------"<< std::endl;
 
           //Store all the possible next states of the current state 
           vector<string> possible_states = successor_states (state);
@@ -108,57 +112,17 @@ int main() {
           /*for(int i = 0; i < possible_states.size();i++){
             std::cout << possible_states[i] << std::endl;
           }*/
-
-          //If the car is too close reduce the velocity
-          if(prediction[3]){
-            ref_vel -= .224;
-          }
-          // If there is car detected in a range increment the velocity with a maximum value of 49.5
-          else if(ref_vel < 49.5){
-            ref_vel += .224;
-          } 
-
-          // Behaviour planning
-          /// PRINT: The current lane of the car adn the current state 
-          std::cout <<"The current state is: "<<state <<"  and the Car's lane is : "<< lane << std::endl;
-
-          vector <double> cost_function_values(possible_states.size());;
-          vector<vector<vector <double>>> possible_trajectories_points(possible_states.size());
-          // Evaluate each of the possible_next_states
-          for(int i = 0; i < possible_states.size();i++){
-            // Generate the trajectory for every possible next state
-            possible_trajectories_points[i]=get_trajectory(map_waypoints_x, map_waypoints_y, map_waypoints_s, prev_size,
-                                                           car_x,car_y, car_s, car_yaw, previous_path_x, previous_path_y,lane,possible_states[i]);
-            // Evaluate each of the states
-            cost_function_values[i] = cost_function(prediction,possible_states[i]);
-            /// PRINT: Cost value of the given state
-            std::cout << "The value of the cost function is:  "<< cost_function_values[i] <<"  for the possible state :  " << possible_states[i] <<std::endl;
-          }
           
-          // Find the lowest value of the cost_functions and return the index
-          int minElementIndex = std::min_element(cost_function_values.begin(),cost_function_values.end()) - cost_function_values.begin();
-          
-          // Update the Lane status
-          if(possible_states[minElementIndex] == "LCL" && prev_size > 2){
-            lane--;
-            state = "LCL";
-          }
-          else if(possible_states[minElementIndex] == "LCR" && prev_size > 2){
-            lane++;
-            state = "LCR";
-          } 
-          else if(possible_states[minElementIndex] == "KL" && prev_size > 2){
-            lane = lane;
-            state = "KL";
-          }
+          //control the velocity of the car
+          control_velocity(prediction[6]);
 
-          //Define the actual (x,y) points we will use for the planner
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
+          // Behaviour planning: Selects the best trajectry previously evaluated with the cost functions
+          vector<vector <double>> next_vals = behavior_planning(map_waypoints_x, map_waypoints_y, map_waypoints_s, prev_size,
+                                                    car_x,car_y, car_s, car_yaw, previous_path_x, previous_path_y,lane,possible_states,prediction);
           
-          //Update the best trajectory [0 = left path trajectory, 1 = right path trajectory, 2 = mid path trajectory][0 = x points and 1 = y points]
-          next_x_vals = possible_trajectories_points[minElementIndex][0];
-          next_y_vals = possible_trajectories_points[minElementIndex][1];
+          // Provide the set of points (x,y) to the simulator
+          vector<double> next_x_vals = next_vals[0];
+          vector<double> next_y_vals = next_vals[1];
 
           json msgJson;
           
