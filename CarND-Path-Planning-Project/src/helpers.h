@@ -161,35 +161,7 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
 }
 
 /**
- * PREVIOUS: Prediction function   
- **/ 
-/*bool get_preditiction_cars(vector<vector<double>> sensor_fusion, int &lane, int prev_size, double car_s){
-  bool too_close = false;
-  //find ref_v to use
-  for(int i = 0; i < sensor_fusion.size(); i++){
-    //car is in my lane 
-    float d = sensor_fusion[i][6];
-    if(d < (2+4*lane+2) && d > (2+4*lane-2)){
-      double vx = sensor_fusion[i][3];
-      double vy = sensor_fusion[i][4];
-      double check_speed = sqrt(vx*vx+vy*vy);
-      double check_car_s = sensor_fusion[i][5];
-
-      //Where the other car will be in the future
-      check_car_s+=((double) prev_size*.02*check_speed); 
-
-      //Check s calues greater than mine and s gap
-      if((check_car_s > car_s) && (check_car_s-car_s) < 30){
-        too_close = true;
-        lane=2;
-      }
-    }
-  }
-  return too_close;
-}*/
-
-/**
- * TODO: Implement the Prediction function that will predict the movements of the other cars  
+ * FUNCTION: Implement the Prediction function that will predict the movements of the other cars  
  **/ 
 vector <bool> get_preditiction_cars(vector<vector<double>> sensor_fusion, int lane, int prev_size, double car_s){
   bool too_close = false;
@@ -240,7 +212,7 @@ vector <bool> get_preditiction_cars(vector<vector<double>> sensor_fusion, int la
 }
 
 /**
- * TODO: Implement the Trajectory function that will build a path for the autonomous car  
+ * FUNCTION: Implement the Trajectory function that will build a path for the autonomous car depending on state  
  **/ 
 vector<vector<double>> get_trajectory(vector<double> &map_waypoints_x,vector<double> &map_waypoints_y, vector<double> &map_waypoints_s, int prev_size,
                                       double car_x, double car_y, double car_s, double car_yaw,vector <double> previous_path_x,vector <double> previous_path_y,int lane,string possible_state){
@@ -288,7 +260,8 @@ vector<vector<double>> get_trajectory(vector<double> &map_waypoints_x,vector<dou
     ptsy.push_back(ref_y);
 
   }
-
+  
+  // Change the lane according to the possible state
   if(possible_state == "KL"){
     lane = lane;
   }
@@ -298,11 +271,11 @@ vector<vector<double>> get_trajectory(vector<double> &map_waypoints_x,vector<dou
   else if(possible_state == "LCR"){
     lane++;
   }
-  
+
   //In Frenet add evenly 30m spaced points ahead of the starting reference
-  vector<double> next_wp0 = getXY(car_s+30,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
-  vector<double> next_wp1 = getXY(car_s+60,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
-  vector<double> next_wp2 = getXY(car_s+90,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+  vector<double> next_wp0 = getXY(car_s+40,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+  vector<double> next_wp1 = getXY(car_s+80,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+  vector<double> next_wp2 = getXY(car_s+120,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
 
   ptsx.push_back(next_wp0[0]);
   ptsx.push_back(next_wp1[0]);
@@ -372,7 +345,7 @@ vector<vector<double>> get_trajectory(vector<double> &map_waypoints_x,vector<dou
 }
 
 /**
- * TODO: Implement the successor_states function that store all the possible next states of a FSM.  
+ * FUNCTION: Implement the successor_states function that store all the possible next states of a FSM.  
  **/
 vector<string> successor_states(string current_state) {
   // Store all the sucessor states of the current state
@@ -397,6 +370,82 @@ vector<string> successor_states(string current_state) {
     states.push_back("KL");
   }
   return states;
+}
+
+/**
+ * FUNCTION: Implement a cost_fuction that evaluates the current state according some evaluation criteria   
+ **/
+double cost_function(vector<bool> prediction, string current_state){
+  double cost = 0.0;
+  ///COSTFUNCTION: Penalizes trajectories outsite the boundaries
+  // Case 1: Car in the right lane or more with possible state LCR
+  if(lane >= 2 && current_state == "LCR"){
+    cost = 1;
+  }
+  
+  // Case 2: Car in the left lane or more with possible state LCL
+  if(lane <= 0 && current_state == "LCL"){
+    cost = 1;
+  }
+  
+  ///COSTFUNCTION: Evaluates all the possible outcomes of the car when other cars are detected or not
+  // Case 1: Car = left lane, state = KL, No car detected in left lane
+  if(prediction[0] == false && lane == 0 && current_state == "KL"){
+    cost = 0.1;
+  }
+  // Case 2: Car = left lane, state = LCR, No car detected in mid lane
+  if(prediction[1] == false && lane == 0 && current_state == "LCR"){
+    cost = 0.2;
+  }
+  // Case 3: Car = left lane, state = KL, Car detected in left lane
+  if(prediction[0] == true && lane == 0 && current_state == "KL"){
+    cost = 0.3;
+  }
+  // Case 4: Car = left lane, state = LCR, Car detected in mid lane
+  if(prediction[1] == true && lane == 0 && current_state == "LCR"){
+    cost = 0.4;
+  }
+  // Case 5: Car = mid lane, state = LCL, No car detected in left lane
+  if(prediction[0] == false && lane == 1 && current_state == "LCL"){
+    cost = 0.2;
+  }
+  // Case 6: Car = mid lane, state = KL, No car detected in mid lane
+  if(prediction[1] == false && lane == 1 && current_state == "KL"){
+    cost = 0.1;
+  }
+  // Case 7: Car = mid lane, state = LCR, No car detected in right lane
+  if(prediction[2] == false && lane == 1 && current_state == "LCR"){
+    cost = 0.3;
+  }
+  // Case 8: Car = mid lane, state = LCL, Car detected in left lane
+  if(prediction[0] == true && lane == 1 && current_state == "LCL"){
+    cost = 0.4;
+  }
+  // Case 9: Car = mid lane, state = KL, Car detected in mid lane
+  if(prediction[1] == true && lane == 1 && current_state == "KL"){
+    cost = 0.3;
+  }
+  // Case 10: Car = mid lane, state = LCR, Car detected in right lane
+  if(prediction[2] == true && lane == 1 && current_state == "LCR"){
+    cost = 0.4;
+  }
+  // Case 11: Car = right lane, state = KL, No car detected in right lane
+  if(prediction[2] == false && lane == 2 && current_state == "KL"){
+    cost = 0.1;
+  }
+  // Case 12: Car = right lane, state = LCL, No car detected in mid lane
+  if(prediction[1] == false && lane == 2 && current_state == "LCL"){
+    cost = 0.2;
+  }
+  // Case 13: Car = right lane, state = KL, Car detected in right lane
+  if(prediction[2] == true && lane == 2 && current_state == "KL"){
+    cost = 0.3;
+  }
+  // Case 14: Car = right lane, state = LCL, Car detected in mid lane
+  if(prediction[1] == true && lane == 2 && current_state == "LCL"){
+    cost = 0.4;
+  }
+  return(cost);
 }
 
 #endif  // HELPERS_H
