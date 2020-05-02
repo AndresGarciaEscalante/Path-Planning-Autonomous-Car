@@ -206,7 +206,7 @@ vector <bool> get_preditiction_cars(vector<vector<double>> sensor_fusion, int la
         }
       }
       // Car behind of the car's "s position" in the left lane
-      else if((check_car_s < car_s) && (car_s-check_car_s < 10)){
+      else if((check_car_s < car_s) && (car_s-check_car_s < 15)){
         rear_left_car = true;
       }
     }
@@ -220,7 +220,7 @@ vector <bool> get_preditiction_cars(vector<vector<double>> sensor_fusion, int la
         }
       }
       // Car in front of the car's "s position" in the mid lane
-      else if((check_car_s < car_s) && (car_s-check_car_s < 10)){
+      else if((check_car_s < car_s) && (car_s-check_car_s < 15)){
         rear_mid_car = true;
       }
     }
@@ -234,7 +234,7 @@ vector <bool> get_preditiction_cars(vector<vector<double>> sensor_fusion, int la
         }
       }
       // Car in front of the car's "s position" in the right lane
-      else if((check_car_s < car_s) && (car_s-check_car_s < 10)){
+      else if((check_car_s < car_s) && (car_s-check_car_s < 15)){
         rear_right_car = true;
       }
     }
@@ -523,11 +523,10 @@ double cost_function(vector<bool> prediction, string current_state){
 vector<vector <double>> behavior_planning(vector<double> &map_waypoints_x,vector<double> &map_waypoints_y, vector<double> &map_waypoints_s, int prev_size,
                       double car_x, double car_y, double car_s, double car_yaw,vector <double> previous_path_x,vector <double> previous_path_y,int lane,
                       vector<string> possible_states,vector<bool> prediction){
-  /// PRINT: The current lane of the car adn the current state 
-  //std::cout <<"The current state is: "<<state <<"  and the Car's lane is : "<< lane << std::endl;
 
   vector <double> cost_function_values(possible_states.size());;
   vector<vector<vector <double>>> possible_trajectories_points(possible_states.size());
+  
   // Evaluate each of the possible_next_states
   for(int i = 0; i < possible_states.size();i++){
     // Generate the trajectory for every possible next state
@@ -535,8 +534,6 @@ vector<vector <double>> behavior_planning(vector<double> &map_waypoints_x,vector
                                                     car_x,car_y, car_s, car_yaw, previous_path_x, previous_path_y,lane,possible_states[i]);
     // Evaluate each of the states
     cost_function_values[i] = cost_function(prediction,possible_states[i]);
-    /// PRINT: Cost value of the given state
-    //std::cout << "The value of the cost function is:  "<< cost_function_values[i] <<"  for the possible state :  " << possible_states[i] <<std::endl;
   }
 
   // Find the lowest value of the cost_functions and return the index
