@@ -1,6 +1,8 @@
 # CarND_Path_Planning
 
-![](gif/path_planning.gif)
+<p align="center">
+  <img src="gif/path_planning.gif">
+</p>
 
 ## Installation:
 
@@ -47,7 +49,9 @@ All the previous variables will keep track of possible risks when making decisio
 ### Next Sucessors Function
 A Finite State Machine (FSM) was used to represent all the states and their respective transition of states. This function allows to store the possible transition states from a given state. 
 
-![](img/FSM.png)
+<p align="center">
+  <img width= 400 src="img/FSM.png">
+</p>
 
 
 ### Behavior Planning Function
